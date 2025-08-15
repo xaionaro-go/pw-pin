@@ -6,8 +6,7 @@ import (
 
 var Get = func() simpleplumber.Config {
 	appSelector := simpleplumber.Constraints{
-		{Parameter: "media.name", Values: []string{"1.webm - mpv"}},
-		{Parameter: "media.class", Values: []string{"Stream/Output/Audio"}},
+		{Parameter: "media.name", Values: []string{" - mpv"}, Op: simpleplumber.ConstraintOpContains},
 	}
 	sinkSelector := simpleplumber.Constraints{
 		{

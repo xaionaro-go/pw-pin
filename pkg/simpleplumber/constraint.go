@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	pwmonitor "github.com/ConnorsApps/pipewire-monitor-go"
+	pwmonitor "github.com/xaionaro-go/pipewire-monitor-go"
 )
 
 type Constraint struct {

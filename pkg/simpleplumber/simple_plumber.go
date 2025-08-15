@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"iter"
 
-	pwmonitor "github.com/ConnorsApps/pipewire-monitor-go"
 	"github.com/facebookincubator/go-belt/tool/logger"
 	"github.com/go-ng/xatomic"
 	"github.com/xaionaro-go/observability"
+	pwmonitor "github.com/xaionaro-go/pipewire-monitor-go"
 	"github.com/xaionaro-go/xsync"
 )
 

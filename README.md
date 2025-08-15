@@ -6,7 +6,7 @@
 
 Install
 ```sh
-go install github.com/xaionaro-go/simpleplumber@latest
+go install github.com/xaionaro-go/simpleplumber/cmd/simpleplumber@main
 ```
 
 Configure:
@@ -16,12 +16,11 @@ cat > ~/.config/simpleplumber/config.conf <<EOF
 ```
 ```yaml
 routes:
-    - from:
+    - from: # to link mpv (matched loosely) with RODECaster Duo (left channel)
         node:
             - parameter: media.name
-              values: [1.webm - mpv]
-            - parameter: media.class
-              values: [Stream/Output/Audio]
+              values: [' - mpv']
+              op: CONTAINS
         port:
             - parameter: port.name
               values: [output_FL]
@@ -33,12 +32,11 @@ routes:
             - parameter: port.name
               values: [playback_AUX0]
       should_be_linked: true
-    - from:
+    - from: # to link mpv (matched loosely) with RODECaster Duo (right channel)
         node:
             - parameter: media.name
-              values: [1.webm - mpv]
-            - parameter: media.class
-              values: [Stream/Output/Audio]
+              values: [' - mpv']
+              op: CONTAINS
         port:
             - parameter: port.name
               values: [output_FR]
@@ -50,12 +48,11 @@ routes:
             - parameter: port.name
               values: [playback_AUX1]
       should_be_linked: true
-    - from:
+    - from: # to unlink it from everything else
         node:
             - parameter: media.name
-              values: [1.webm - mpv]
-            - parameter: media.class
-              values: [Stream/Output/Audio]
+              values: [' - mpv']
+              op: CONTAINS
       should_be_linked: false
 ```
 ```sh

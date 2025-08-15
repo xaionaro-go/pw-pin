@@ -1,7 +1,7 @@
 package simpleplumber
 
 import (
-	pwmonitor "github.com/ConnorsApps/pipewire-monitor-go"
+	pwmonitor "github.com/xaionaro-go/pipewire-monitor-go"
 )
 
 type Port struct {

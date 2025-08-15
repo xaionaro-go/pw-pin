@@ -46,8 +46,8 @@ github.com/xaionaro-go/object v0.0.0-20241026212449-753ce10ec94c h1:2CIIxTRox9au
 github.com/xaionaro-go/object v0.0.0-20241026212449-753ce10ec94c/go.mod h1:vRcA12NWsR0IrS75eqnPBs5aVfCYmJy4bR+6DbJpBCg=
 github.com/xaionaro-go/observability v0.0.0-20250622130956-24b7017284e4 h1:dlsJ1l9WI+LTpB5z4f7FCLLrxJ7uV4tj9jWNqpibhA0=
 github.com/xaionaro-go/observability v0.0.0-20250622130956-24b7017284e4/go.mod h1:GkNC0+nPJMOzotTzJVlH4+DvDg9cKrV9qqOe+8/kVw4=
-github.com/xaionaro-go/pipewire-monitor-go v0.0.0-20250815202348-da2c442a20cd h1:ixEjCMcqyPbWP3sDXCJpqFacT5Ey5ZGlp1ZkKxlXYxY=
-github.com/xaionaro-go/pipewire-monitor-go v0.0.0-20250815202348-da2c442a20cd/go.mod h1:gOwr2EkqI3ZXtrZ7sn0Yyx8X4hEZphkO5F70v9bjEmw=
+github.com/xaionaro-go/pipewire-monitor-go v0.0.0-20250815230842-0d656b62411c h1:r9NJssRvojvS7c55Jl/chXescdLDj4LU4jAo5JkpV7w=
+github.com/xaionaro-go/pipewire-monitor-go v0.0.0-20250815230842-0d656b62411c/go.mod h1:i/RqksEHe3JAhMRIYUYpZreBtU8Wcj2AbsCmFOPGveI=
 github.com/xaionaro-go/secret v0.0.0-20250111141743-ced12e1082c2 h1:QHpTWfyfmz65cE0MtFXe9fScdi+X0VIYR2wgolSYEUk=
 github.com/xaionaro-go/secret v0.0.0-20250111141743-ced12e1082c2/go.mod h1:XKoHGZ4VKMbVBl8VotLIoWQdrB6Q7jnR++RbkiegZFU=
 github.com/xaionaro-go/spinlock v0.0.0-20190309154744-55278e21e817/go.mod h1:Nb/15eS0BMty6TMuWgRQM8WCDIUlyPZagcpchHT6c9Y=
