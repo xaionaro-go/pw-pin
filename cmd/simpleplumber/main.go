@@ -5,15 +5,15 @@ import (
 	"flag"
 	"net/http"
 	_ "net/http/pprof"
-	"strings"
+	"os"
 	"time"
 
 	"github.com/facebookincubator/go-belt"
 	"github.com/facebookincubator/go-belt/tool/logger"
 	"github.com/facebookincubator/go-belt/tool/logger/implementation/logrus"
 	"github.com/xaionaro-go/observability"
-	"github.com/xaionaro-go/simpleplumber/pkg/sampleconfig"
 	"github.com/xaionaro-go/simpleplumber/pkg/simpleplumber"
+	"github.com/xaionaro-go/xpath"
 )
 
 func main() {
@@ -24,7 +24,28 @@ func main() {
 		"",
 		"address to listen to for net/pprof requests",
 	)
+	configPathRaw := flag.String(
+		"config-file",
+		"~/.config/simpleplumber/config.yaml",
+		"path to the configuration file",
+	)
+	generateSampleConfig := flag.Bool(
+		"generate-sample-config",
+		false,
+		"generate a sample configuration file and exit",
+	)
 	flag.Parse()
+
+	if *generateSampleConfig {
+		printSampleConfig()
+		os.Exit(0)
+	}
+
+	configPath := must(xpath.Expand(*configPathRaw))
+	configBytes := must(os.ReadFile(configPath))
+
+	var config simpleplumber.Config
+	assertNoError(config.Parse(configBytes))
 
 	l := logrus.Default().WithLevel(logLevel)
 	ctx := context.Background()
@@ -42,7 +63,7 @@ func main() {
 	}
 
 	sp := simpleplumber.New()
-	sp.SetConfig(sampleconfig.Get())
+	sp.SetConfig(config)
 
 	logger.Infof(ctx, "started")
 
@@ -65,8 +86,5 @@ func main() {
 		}
 	})
 
-	ctx = simpleplumber.CtxWithOnRun(ctx, func(ctx context.Context, arg0 string, arg1toN ...string) {
-		logger.Infof(ctx, "running command: %s %s", arg0, strings.Join(arg1toN, " "))
-	})
-	must(sp.ServeContext(ctx))
+	assertNoError(sp.ServeContext(ctx))
 }

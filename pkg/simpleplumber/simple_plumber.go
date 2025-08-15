@@ -62,8 +62,8 @@ func New() *SimplePlumber {
 	}
 }
 
-func (p *SimplePlumber) SetConfig(config *Config) {
-	xatomic.StorePointer(&p.Config, config)
+func (p *SimplePlumber) SetConfig(config Config) {
+	xatomic.StorePointer(&p.Config, ptr(config))
 }
 
 func (p *SimplePlumber) GetConfig() *Config {
@@ -210,8 +210,12 @@ func (p *SimplePlumber) forgetLink(ctx context.Context, eInfo *pwmonitor.EventIn
 		logger.Warnf(ctx, "forgetLink(%s): link not found", jsoninze(eInfo))
 		return nil
 	}
-	delete(p.ActiveSources[linkKey.From.NodeID].InboundLinks, linkKey.To)
-	delete(p.ActiveSinks[linkKey.To.NodeID].OutboundLinks, linkKey.From)
+	if source := p.ActiveSources[linkKey.From.NodeID]; source != nil {
+		delete(source.InboundLinks, linkKey.To)
+	}
+	if sink := p.ActiveSinks[linkKey.To.NodeID]; sink != nil {
+		delete(sink.OutboundLinks, linkKey.From)
+	}
 	delete(p.ActiveLinks, linkKey)
 	return nil
 }
@@ -241,12 +245,12 @@ func (p *SimplePlumber) addOrUpdateLink(
 
 	nodeInput := p.ActiveSources[linkKey.From.NodeID]
 	if nodeInput == nil {
-		logger.Warnf(ctx, "processEventLink(%s): source node %d not found", jsoninze(e), linkKey.From.NodeID)
+		logger.Debugf(ctx, "processEventLink(%s): source node %d not found", jsoninze(e), linkKey.From.NodeID) // TODO: investigate why this happens
 		return nil
 	}
 	nodeOutput := p.ActiveSinks[linkKey.To.NodeID]
 	if nodeOutput == nil {
-		logger.Warnf(ctx, "processEventLink(%s): sink node %d not found", jsoninze(e), linkKey.To.NodeID)
+		logger.Debugf(ctx, "processEventLink(%s): sink node %d not found", jsoninze(e), linkKey.To.NodeID) // TODO: investigate why this happens
 		return nil
 	}
 
@@ -509,10 +513,10 @@ func (p *SimplePlumber) fixConnections(ctx context.Context, node *Node, port *Po
 	var remotePortSelectorFunc func(r *Route) Constraints
 	var remoteNodes iter.Seq[*Node]
 	if port.IsOutput() {
-		myNodeSelectorFunc = func(r *Route) Constraints { return r.InputNodesSelector }
-		myPortSelectorFunc = func(r *Route) Constraints { return r.InputPortsSelector }
-		remoteNodeSelectorFunc = func(r *Route) Constraints { return r.OutputNodesSelector }
-		remotePortSelectorFunc = func(r *Route) Constraints { return r.OutputPortsSelector }
+		myNodeSelectorFunc = func(r *Route) Constraints { return r.From.Node }
+		myPortSelectorFunc = func(r *Route) Constraints { return r.From.Port }
+		remoteNodeSelectorFunc = func(r *Route) Constraints { return r.To.Node }
+		remotePortSelectorFunc = func(r *Route) Constraints { return r.To.Port }
 		remoteNodes = func(yield func(*Node) bool) {
 			for _, sink := range p.ActiveSinks {
 				if !yield(sink.Node) {
@@ -521,10 +525,10 @@ func (p *SimplePlumber) fixConnections(ctx context.Context, node *Node, port *Po
 			}
 		}
 	} else if port.IsInput() {
-		myNodeSelectorFunc = func(r *Route) Constraints { return r.OutputNodesSelector }
-		myPortSelectorFunc = func(r *Route) Constraints { return r.OutputPortsSelector }
-		remoteNodeSelectorFunc = func(r *Route) Constraints { return r.InputNodesSelector }
-		remotePortSelectorFunc = func(r *Route) Constraints { return r.InputPortsSelector }
+		myNodeSelectorFunc = func(r *Route) Constraints { return r.To.Node }
+		myPortSelectorFunc = func(r *Route) Constraints { return r.To.Port }
+		remoteNodeSelectorFunc = func(r *Route) Constraints { return r.From.Node }
+		remotePortSelectorFunc = func(r *Route) Constraints { return r.From.Port }
 		remoteNodes = func(yield func(*Node) bool) {
 			for _, source := range p.ActiveSources {
 				if !yield(source.Node) {
@@ -574,8 +578,8 @@ func (p *SimplePlumber) fixConnections(ctx context.Context, node *Node, port *Po
 				err := p.makeLinkState(ctx, node.ID, port.ID, remoteNode.ID, remotePort.ID, route.ShouldBeLinked)
 				alreadySet[remotePortKey] = struct{}{}
 				if err != nil {
-					logger.Errorf(ctx, "error making link state for node %d, port %d to remote node %d, port %d: %v",
-						node.ID, port.ID, remoteNode.ID, remotePort.ID, err)
+					logger.Errorf(ctx, "error making link state for node %d, port %d to remote node %d, port %d to %t: %v",
+						node.ID, port.ID, remoteNode.ID, remotePort.ID, route.ShouldBeLinked, err)
 					return nil
 				}
 			}

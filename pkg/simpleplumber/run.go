@@ -22,12 +22,14 @@ func (p *SimplePlumber) createLink(ctx context.Context, linkKey LinkKey) (_err e
 	)
 	if err != nil {
 		runErr := err.(ErrRun)
-		if strings.Trim(runErr.Stderr, " \r\n\t") == "failed to link ports: File exists" {
+		stdErrMsg := strings.Trim(runErr.Stderr, " \r\n\t")
+		if stdErrMsg == "failed to link ports: File exists" {
 			logger.Debugf(ctx, "the link already exists, ignoring the error")
 			return nil
 		}
 		return fmt.Errorf("failed to create the link %s: %w", jsoninze(linkKey), err)
 	}
+	logger.Infof(ctx, "link %s created", jsoninze(linkKey))
 	return nil
 }
 
@@ -43,12 +45,14 @@ func (p *SimplePlumber) destroyLink(ctx context.Context, linkKey LinkKey) (_err 
 	)
 	if err != nil {
 		runErr := err.(ErrRun)
-		if strings.Trim(runErr.Stderr, " \r\n\t") == "failed to link ports: No such file or directory" {
+		stdErrMsg := strings.Trim(runErr.Stderr, " \r\n\t")
+		if stdErrMsg == "failed to unlink ports: No such file or directory" {
 			logger.Debugf(ctx, "the link already does not exist, ignoring the error")
 			return nil
 		}
 		return fmt.Errorf("failed to destroy the link %s: %w", jsoninze(linkKey), err)
 	}
+	logger.Infof(ctx, "link %s destroyed", jsoninze(linkKey))
 	return nil
 }
 

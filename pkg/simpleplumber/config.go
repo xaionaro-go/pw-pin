@@ -1,95 +1,39 @@
 package simpleplumber
 
 import (
-	"encoding/json"
 	"fmt"
-	"strings"
 
-	pwmonitor "github.com/ConnorsApps/pipewire-monitor-go"
+	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
 	Routes Routes
 }
 
+func (cfg *Config) Parse(data []byte) error {
+	if err := yaml.Unmarshal(data, cfg); err != nil {
+		return fmt.Errorf("failed to parse config: %w", err)
+	}
+	return nil
+}
+
+func (cfg *Config) Bytes() ([]byte, error) {
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal config: %w", err)
+	}
+	return data, nil
+}
+
 type Routes []Route
 
+type FullyQualifiedPortSelector struct {
+	Node Constraints `yaml:"node,omitempty"`
+	Port Constraints `yaml:"port,omitempty"`
+}
+
 type Route struct {
-	InputNodesSelector  Constraints
-	InputPortsSelector  Constraints
-	OutputNodesSelector Constraints
-	OutputPortsSelector Constraints
-	ShouldBeLinked      bool
+	From           FullyQualifiedPortSelector `yaml:"from,omitempty"`
+	To             FullyQualifiedPortSelector `yaml:"to,omitempty"`
+	ShouldBeLinked bool                       `yaml:"should_be_linked"`
 }
-
-type Constraint struct {
-	Parameter string
-	Values    []string
-	Op        ConstraintOp
-}
-
-func (c Constraint) Match(props pwmonitor.EventInfoProps) bool {
-	if c.Parameter == "" {
-		return false
-	}
-
-	b, err := json.Marshal(props)
-	if err != nil {
-		panic(err)
-	}
-	var m map[string]any
-	if err := json.Unmarshal(b, &m); err != nil {
-		panic(err)
-	}
-
-	value, ok := m[c.Parameter]
-	if !ok {
-		return false
-	}
-	valueStr := fmt.Sprintf("%v", value)
-
-	for _, v := range c.Values {
-		switch c.Op {
-		case ConstraintOpEqual:
-			if v == valueStr {
-				return true
-			}
-		case ConstraintOpNotEqual:
-			if v != valueStr {
-				return true
-			}
-		case ConstraintOpContains:
-			if strings.Contains(valueStr, v) {
-				return true
-			}
-		case ConstraintOpNotContains:
-			if !strings.Contains(valueStr, v) {
-				return true
-			}
-		default:
-			return false
-		}
-	}
-	return false
-}
-
-type Constraints []Constraint
-
-func (c Constraints) Match(props pwmonitor.EventInfoProps) bool {
-	for _, constraint := range c {
-		if !constraint.Match(props) {
-			return false
-		}
-	}
-	return true
-}
-
-type ConstraintOp int
-
-const (
-	constraintOpUndefined ConstraintOp = iota
-	ConstraintOpEqual
-	ConstraintOpNotEqual
-	ConstraintOpContains
-	ConstraintOpNotContains
-)
