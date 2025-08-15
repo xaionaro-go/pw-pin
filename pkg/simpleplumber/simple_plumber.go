@@ -35,8 +35,8 @@ type PortKey struct {
 }
 
 type LinkKey struct {
-	Input  PortKey
-	Output PortKey
+	From PortKey
+	To   PortKey
 }
 
 type Link struct {
@@ -197,21 +197,21 @@ func (p *SimplePlumber) forgetLink(ctx context.Context, eInfo *pwmonitor.EventIn
 	logger.Debugf(ctx, "forgetLink(%s)", jsoninze(eInfo))
 	defer func() { logger.Tracef(ctx, "/forgetLink(%s)", jsoninze(eInfo)) }()
 	linkKey := LinkKey{
-		Input: PortKey{
-			NodeID: *eInfo.Props.LinkInputNode,
-			PortID: *eInfo.Props.LinkInputPort,
-		},
-		Output: PortKey{
+		From: PortKey{
 			NodeID: *eInfo.Props.LinkOutputNode,
 			PortID: *eInfo.Props.LinkOutputPort,
+		},
+		To: PortKey{
+			NodeID: *eInfo.Props.LinkInputNode,
+			PortID: *eInfo.Props.LinkInputPort,
 		},
 	}
 	if _, ok := p.ActiveLinks[linkKey]; !ok {
 		logger.Warnf(ctx, "forgetLink(%s): link not found", jsoninze(eInfo))
 		return nil
 	}
-	delete(p.ActiveSources[linkKey.Input.NodeID].InboundLinks, linkKey.Output)
-	delete(p.ActiveSinks[linkKey.Output.NodeID].OutboundLinks, linkKey.Input)
+	delete(p.ActiveSources[linkKey.From.NodeID].InboundLinks, linkKey.To)
+	delete(p.ActiveSinks[linkKey.To.NodeID].OutboundLinks, linkKey.From)
 	delete(p.ActiveLinks, linkKey)
 	return nil
 }
@@ -224,13 +224,13 @@ func (p *SimplePlumber) addOrUpdateLink(
 	defer func() { logger.Tracef(ctx, "/addOrUpdateLink(%s)", jsoninze(e)) }()
 
 	linkKey := LinkKey{
-		Input: PortKey{
-			NodeID: *e.Info.Props.LinkInputNode,
-			PortID: *e.Info.Props.LinkInputPort,
-		},
-		Output: PortKey{
+		From: PortKey{
 			NodeID: *e.Info.Props.LinkOutputNode,
 			PortID: *e.Info.Props.LinkOutputPort,
+		},
+		To: PortKey{
+			NodeID: *e.Info.Props.LinkInputNode,
+			PortID: *e.Info.Props.LinkInputPort,
 		},
 	}
 
@@ -239,42 +239,42 @@ func (p *SimplePlumber) addOrUpdateLink(
 		return nil
 	}
 
-	nodeInput := p.ActiveSources[linkKey.Input.NodeID]
+	nodeInput := p.ActiveSources[linkKey.From.NodeID]
 	if nodeInput == nil {
-		logger.Warnf(ctx, "processEventLink(%s): source node %d not found", jsoninze(e), linkKey.Input.NodeID)
+		logger.Warnf(ctx, "processEventLink(%s): source node %d not found", jsoninze(e), linkKey.From.NodeID)
 		return nil
 	}
-	nodeOutput := p.ActiveSinks[linkKey.Output.NodeID]
+	nodeOutput := p.ActiveSinks[linkKey.To.NodeID]
 	if nodeOutput == nil {
-		logger.Warnf(ctx, "processEventLink(%s): sink node %d not found", jsoninze(e), linkKey.Output.NodeID)
+		logger.Warnf(ctx, "processEventLink(%s): sink node %d not found", jsoninze(e), linkKey.To.NodeID)
 		return nil
 	}
 
 	logger.Debugf(ctx, "processEventLink(%s): new link", jsoninze(e))
 	link := &Link{Info: e.Info}
 	p.ActiveLinks[linkKey] = link
-	nodeInput.InboundLinks[linkKey.Output] = link
-	nodeOutput.OutboundLinks[linkKey.Input] = link
+	nodeInput.InboundLinks[linkKey.To] = link
+	nodeOutput.OutboundLinks[linkKey.From] = link
 
-	portInput := nodeInput.Node.Ports[linkKey.Input.PortID]
+	portInput := nodeInput.Node.Ports[linkKey.From.PortID]
 	if portInput == nil {
-		logger.Warnf(ctx, "processEventLink(%s): input port %d not found", jsoninze(e), linkKey.Input.PortID)
+		logger.Warnf(ctx, "processEventLink(%s): input port %d not found", jsoninze(e), linkKey.From.PortID)
 		return nil
 	}
-	portOutput := nodeOutput.Node.Ports[linkKey.Output.PortID]
+	portOutput := nodeOutput.Node.Ports[linkKey.To.PortID]
 	if portOutput == nil {
-		logger.Warnf(ctx, "processEventLink(%s): output port %d not found", jsoninze(e), linkKey.Output.PortID)
+		logger.Warnf(ctx, "processEventLink(%s): output port %d not found", jsoninze(e), linkKey.To.PortID)
 		return nil
 	}
 
 	err := p.fixConnections(ctx, nodeInput.Node, portInput)
 	if err != nil {
-		return fmt.Errorf("error making connections for the input node&port %d:%d: %w", linkKey.Input.NodeID, linkKey.Input.PortID, err)
+		return fmt.Errorf("error making connections for the input node&port %d:%d: %w", linkKey.From.NodeID, linkKey.From.PortID, err)
 	}
 
 	err = p.fixConnections(ctx, nodeOutput.Node, portOutput)
 	if err != nil {
-		return fmt.Errorf("error making connections for the output node&port %d:%d: %w", linkKey.Output.NodeID, linkKey.Output.PortID, err)
+		return fmt.Errorf("error making connections for the output node&port %d:%d: %w", linkKey.To.NodeID, linkKey.To.PortID, err)
 	}
 
 	return nil
@@ -334,9 +334,9 @@ func (p *SimplePlumber) processEventNodeStreamOutputAudioNoLock(
 	defer func() { logger.Tracef(ctx, "/processEventNodeStreamOutputAudioNoLock(%s)", jsoninze(e)) }()
 	switch *e.Info.State {
 	case pwmonitor.StateIdle:
-		return p.forgetSink(ctx, e.ID)
+		return p.forgetSource(ctx, e.ID)
 	default:
-		return p.addOrUpdateSink(ctx, e)
+		return p.addOrUpdateSource(ctx, e)
 	}
 }
 
@@ -354,9 +354,9 @@ func (p *SimplePlumber) processEventNodeStreamInputAudioNoLock(
 	defer func() { logger.Tracef(ctx, "/processEventNodeStreamInputAudioNoLock(%s)", jsoninze(e)) }()
 	switch *e.Info.State {
 	case pwmonitor.StateIdle:
-		return p.forgetSource(ctx, e.ID)
+		return p.forgetSink(ctx, e.ID)
 	default:
-		return p.addOrUpdateSource(ctx, e)
+		return p.addOrUpdateSink(ctx, e)
 	}
 }
 
@@ -536,6 +536,7 @@ func (p *SimplePlumber) fixConnections(ctx context.Context, node *Node, port *Po
 		return fmt.Errorf("port %d is neither input nor output", port.ID)
 	}
 
+	alreadySet := map[PortKey]struct{}{}
 	for _, route := range cfg.Routes {
 		if !myNodeSelectorFunc(&route).Match(*node.Info.Props) {
 			continue
@@ -548,20 +549,17 @@ func (p *SimplePlumber) fixConnections(ctx context.Context, node *Node, port *Po
 			logger.Debugf(ctx, "fixConnections: this port (%s: %s) matches the route rule %s, checking remote nodes and ports", jsoninze(*node.Info.Props), jsoninze(*port.Info.Props), jsoninze(route))
 		}
 
-		if node.Info.Props.ApplicationID != nil && *node.Info.Props.ApplicationID == "mpv" {
-			logger.Debugf(ctx, "fixConnections: evaluating route rule %s for mpv node %d, port %d (isInput:%t)", jsoninze(route), node.ID, port.ID, port.IsInput())
-		}
-
 		for remoteNode := range remoteNodes {
-			if node.Info.Props.ApplicationID != nil && *node.Info.Props.ApplicationID == "mpv" {
-				logger.Debugf(ctx, "fixConnections: evaluating remote node %d: %s", remoteNode.ID, jsoninze(*remoteNode.Info.Props))
-			}
 			if !remoteNodeSelectorFunc(&route).Match(*remoteNode.Info.Props) {
 				continue
 			}
 			for _, remotePort := range remoteNode.Ports {
-				if node.Info.Props.ApplicationID != nil && *node.Info.Props.ApplicationID == "mpv" {
-					logger.Debugf(ctx, "fixConnections: evaluating remote port %d: %s", remotePort.ID, jsoninze(*remotePort.Info.Props))
+				remotePortKey := PortKey{
+					NodeID: remoteNode.ID,
+					PortID: remotePort.ID,
+				}
+				if _, ok := alreadySet[remotePortKey]; ok {
+					continue
 				}
 				if !remotePortSelectorFunc(&route).Match(*remotePort.Info.Props) {
 					continue
@@ -574,6 +572,7 @@ func (p *SimplePlumber) fixConnections(ctx context.Context, node *Node, port *Po
 				logger.Debugf(ctx, "fixConnections: making link state for node %d, port %d to remote node %d, port %d to %t due to route rule %s",
 					node.ID, port.ID, remoteNode.ID, remotePort.ID, route.ShouldBeLinked, jsoninze(route))
 				err := p.makeLinkState(ctx, node.ID, port.ID, remoteNode.ID, remotePort.ID, route.ShouldBeLinked)
+				alreadySet[remotePortKey] = struct{}{}
 				if err != nil {
 					logger.Errorf(ctx, "error making link state for node %d, port %d to remote node %d, port %d: %v",
 						node.ID, port.ID, remoteNode.ID, remotePort.ID, err)
@@ -606,22 +605,22 @@ func (p *SimplePlumber) makeLinkState(
 	var linkKey LinkKey
 	if _, ok := p.ActiveSources[nodeID0]; ok {
 		linkKey = LinkKey{
-			Input: PortKey{
+			From: PortKey{
 				NodeID: nodeID0,
 				PortID: portID0,
 			},
-			Output: PortKey{
+			To: PortKey{
 				NodeID: nodeID1,
 				PortID: portID1,
 			},
 		}
 	} else if _, ok := p.ActiveSinks[nodeID0]; ok {
 		linkKey = LinkKey{
-			Input: PortKey{
+			From: PortKey{
 				NodeID: nodeID1,
 				PortID: portID1,
 			},
-			Output: PortKey{
+			To: PortKey{
 				NodeID: nodeID0,
 				PortID: portID0,
 			},

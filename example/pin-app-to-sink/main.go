@@ -69,10 +69,9 @@ func main() {
 				OutputNodesSelector: sinkSelector,
 				OutputPortsSelector: simpleplumber.Constraints{{Parameter: "port.name", Values: []string{"playback_AUX1"}, Op: simpleplumber.ConstraintOpEqual}},
 			},
-			{ // de-link app from all outputs
-				ShouldBeLinked:      false,
-				InputNodesSelector:  appSelector,
-				OutputNodesSelector: simpleplumber.Constraints{},
+			{ // unlink app from all outputs
+				ShouldBeLinked:     false,
+				InputNodesSelector: appSelector,
 			},
 		},
 	})
