@@ -72,3 +72,8 @@ INFO[0005]run.go:33 link {"From":{"NodeID":206,"PortID":208},"To":{"NodeID":114,
 INFO[0005]run.go:56 link {"From":{"NodeID":206,"PortID":208},"To":{"NodeID":74,"PortID":137}} destroyed
 INFO[0005]run.go:56 link {"From":{"NodeID":206,"PortID":208},"To":{"NodeID":319,"PortID":203}} destroyed
 ```
+
+If you need more info about `parameter`-s mentioned in the config, try running:
+```sh
+pw-dump --monitor
+```
