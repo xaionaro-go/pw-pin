@@ -6,12 +6,12 @@ import (
 
 var Get = func() simpleplumber.Config {
 	appSelector := simpleplumber.Constraints{
-		{Parameter: "media.name", Values: []string{" - mpv"}, Op: simpleplumber.ConstraintOpContains},
+		{Property: "media.name", Values: []string{" - mpv"}, Op: simpleplumber.ConstraintOpContains},
 	}
 	sinkSelector := simpleplumber.Constraints{
 		{
-			Parameter: "node.name",
-			Values:    []string{"alsa_output.usb-R__DE_RODECaster_Duo_IR0037235-00.pro-output-0"},
+			Property: "node.name",
+			Values:   []string{"alsa_output.usb-R__DE_RODECaster_Duo_IR0037235-00.pro-output-0"},
 		},
 	}
 
@@ -21,22 +21,22 @@ var Get = func() simpleplumber.Config {
 				ShouldBeLinked: true,
 				From: simpleplumber.FullyQualifiedPortSelector{
 					Node: appSelector,
-					Port: simpleplumber.Constraints{{Parameter: "port.name", Values: []string{"output_FL"}}},
+					Port: simpleplumber.Constraints{{Property: "port.name", Values: []string{"output_FL"}}},
 				},
 				To: simpleplumber.FullyQualifiedPortSelector{
 					Node: sinkSelector,
-					Port: simpleplumber.Constraints{{Parameter: "port.name", Values: []string{"playback_AUX0"}}},
+					Port: simpleplumber.Constraints{{Property: "port.name", Values: []string{"playback_AUX0"}}},
 				},
 			},
 			{ // link app to specific output (right channel)
 				ShouldBeLinked: true,
 				From: simpleplumber.FullyQualifiedPortSelector{
 					Node: appSelector,
-					Port: simpleplumber.Constraints{{Parameter: "port.name", Values: []string{"output_FR"}}},
+					Port: simpleplumber.Constraints{{Property: "port.name", Values: []string{"output_FR"}}},
 				},
 				To: simpleplumber.FullyQualifiedPortSelector{
 					Node: sinkSelector,
-					Port: simpleplumber.Constraints{{Parameter: "port.name", Values: []string{"playback_AUX1"}}},
+					Port: simpleplumber.Constraints{{Property: "port.name", Values: []string{"playback_AUX1"}}},
 				},
 			},
 			{ // unlink app from all outputs

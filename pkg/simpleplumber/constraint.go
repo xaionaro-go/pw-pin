@@ -9,13 +9,13 @@ import (
 )
 
 type Constraint struct {
-	Parameter string       `yaml:"parameter"`
-	Values    []string     `yaml:"values,flow"`
-	Op        ConstraintOp `yaml:"op,omitempty"`
+	Property string       `yaml:"property"`
+	Values   []string     `yaml:"values,flow"`
+	Op       ConstraintOp `yaml:"op,omitempty"`
 }
 
 func (c Constraint) Match(props pwmonitor.EventInfoProps) bool {
-	if c.Parameter == "" {
+	if c.Property == "" {
 		return false
 	}
 
@@ -28,7 +28,7 @@ func (c Constraint) Match(props pwmonitor.EventInfoProps) bool {
 		panic(err)
 	}
 
-	value, ok := m[c.Parameter]
+	value, ok := m[c.Property]
 	if !ok {
 		return false
 	}

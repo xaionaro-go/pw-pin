@@ -18,39 +18,39 @@ cat > ~/.config/simpleplumber/config.conf <<EOF
 routes:
     - from: # to link mpv (matched loosely) with RODECaster Duo (left channel)
         node:
-            - parameter: media.name
+            - property: media.name
               values: [' - mpv']
               op: CONTAINS
         port:
-            - parameter: port.name
+            - property: port.name
               values: [output_FL]
       to:
         node:
-            - parameter: node.name
+            - property: node.name
               values: [alsa_output.usb-R__DE_RODECaster_Duo_IR0037235-00.pro-output-0]
         port:
-            - parameter: port.name
+            - property: port.name
               values: [playback_AUX0]
       should_be_linked: true
     - from: # to link mpv (matched loosely) with RODECaster Duo (right channel)
         node:
-            - parameter: media.name
+            - property: media.name
               values: [' - mpv']
               op: CONTAINS
         port:
-            - parameter: port.name
+            - property: port.name
               values: [output_FR]
       to:
         node:
-            - parameter: node.name
+            - property: node.name
               values: [alsa_output.usb-R__DE_RODECaster_Duo_IR0037235-00.pro-output-0]
         port:
-            - parameter: port.name
+            - property: port.name
               values: [playback_AUX1]
       should_be_linked: true
     - from: # to unlink it from everything else
         node:
-            - parameter: media.name
+            - property: media.name
               values: [' - mpv']
               op: CONTAINS
       should_be_linked: false
@@ -73,7 +73,7 @@ INFO[0005]run.go:56 link {"From":{"NodeID":206,"PortID":208},"To":{"NodeID":74,"
 INFO[0005]run.go:56 link {"From":{"NodeID":206,"PortID":208},"To":{"NodeID":319,"PortID":203}} destroyed
 ```
 
-If you need more info about `parameter`-s mentioned in the config, try running:
+If you need more info about `property`-ies mentioned in the config, try running (see `props`):
 ```sh
 pw-dump --monitor
 ```
