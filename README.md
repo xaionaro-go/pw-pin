@@ -63,3 +63,12 @@ Run:
 ```sh
 "$(go env GOPATH)"/bin/simpleplumber
 ```
+
+An example of output:
+```sh
+streaming@void:~/go/src/github.com/xaionaro-go/simpleplumber$ ~/go/bin/simpleplumber
+INFO[0000]main.go:70 started
+INFO[0005]run.go:33 link {"From":{"NodeID":206,"PortID":208},"To":{"NodeID":114,"PortID":145}} created
+INFO[0005]run.go:56 link {"From":{"NodeID":206,"PortID":208},"To":{"NodeID":74,"PortID":137}} destroyed
+INFO[0005]run.go:56 link {"From":{"NodeID":206,"PortID":208},"To":{"NodeID":319,"PortID":203}} destroyed
+```
