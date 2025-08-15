@@ -5,6 +5,7 @@ import (
 	"flag"
 	"net/http"
 	_ "net/http/pprof"
+	"strings"
 	"time"
 
 	"github.com/facebookincubator/go-belt"
@@ -40,24 +41,33 @@ func main() {
 	}
 
 	appSelector := simpleplumber.Constraints{
-		{Parameter: "node.name", Values: []string{"mpv"}, Op: simpleplumber.ConstraintOpEqual},
 		{Parameter: "media.name", Values: []string{"1.webm - mpv"}, Op: simpleplumber.ConstraintOpEqual},
 		{Parameter: "media.class", Values: []string{"Stream/Output/Audio"}, Op: simpleplumber.ConstraintOpEqual},
+	}
+	sinkSelector := simpleplumber.Constraints{
+		{
+			Parameter: "node.name",
+			Values:    []string{"alsa_output.usb-R__DE_RODECaster_Duo_IR0037235-00.pro-output-0"},
+			Op:        simpleplumber.ConstraintOpEqual,
+		},
 	}
 
 	sp := simpleplumber.New()
 	sp.SetConfig(&simpleplumber.Config{
 		Routes: []simpleplumber.Route{ // the higher in the list, the higher priority
-			{ // link app to specific output
-				ShouldBeLinked:     true,
-				InputNodesSelector: appSelector,
-				OutputNodesSelector: simpleplumber.Constraints{
-					{
-						Parameter: "node.name",
-						Values:    []string{"alsa_output.usb-R__DE_RODECaster_Duo_IR0037235-00.pro-output-0"},
-						Op:        simpleplumber.ConstraintOpEqual,
-					},
-				},
+			{ // link app to specific output (left channel)
+				ShouldBeLinked:      true,
+				InputNodesSelector:  appSelector,
+				InputPortsSelector:  simpleplumber.Constraints{{Parameter: "port.name", Values: []string{"output_FL"}, Op: simpleplumber.ConstraintOpEqual}},
+				OutputNodesSelector: sinkSelector,
+				OutputPortsSelector: simpleplumber.Constraints{{Parameter: "port.name", Values: []string{"playback_AUX0"}, Op: simpleplumber.ConstraintOpEqual}},
+			},
+			{ // link app to specific output (right channel)
+				ShouldBeLinked:      true,
+				InputNodesSelector:  appSelector,
+				InputPortsSelector:  simpleplumber.Constraints{{Parameter: "port.name", Values: []string{"output_FR"}, Op: simpleplumber.ConstraintOpEqual}},
+				OutputNodesSelector: sinkSelector,
+				OutputPortsSelector: simpleplumber.Constraints{{Parameter: "port.name", Values: []string{"playback_AUX1"}, Op: simpleplumber.ConstraintOpEqual}},
 			},
 			{ // de-link app from all outputs
 				ShouldBeLinked:      false,
@@ -88,5 +98,8 @@ func main() {
 		}
 	})
 
+	ctx = simpleplumber.CtxWithOnRun(ctx, func(ctx context.Context, arg0 string, arg1toN ...string) {
+		logger.Infof(ctx, "running command: %s %s", arg0, strings.Join(arg1toN, " "))
+	})
 	must(sp.ServeContext(ctx))
 }
