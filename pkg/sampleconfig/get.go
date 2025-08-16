@@ -18,7 +18,7 @@ var Get = func() simpleplumber.Config {
 	return simpleplumber.Config{
 		Routes: []simpleplumber.Route{ // the higher in the list, the higher priority
 			{ // link app to specific output (left channel)
-				ShouldBeLinked: true,
+				ShouldBeLinked: ptr(true),
 				From: simpleplumber.FullyQualifiedPortSelector{
 					Node: appSelector,
 					Port: simpleplumber.Constraints{{Property: "port.name", Values: []string{"output_FL"}}},
@@ -29,7 +29,7 @@ var Get = func() simpleplumber.Config {
 				},
 			},
 			{ // link app to specific output (right channel)
-				ShouldBeLinked: true,
+				ShouldBeLinked: ptr(true),
 				From: simpleplumber.FullyQualifiedPortSelector{
 					Node: appSelector,
 					Port: simpleplumber.Constraints{{Property: "port.name", Values: []string{"output_FR"}}},
@@ -39,8 +39,20 @@ var Get = func() simpleplumber.Config {
 					Port: simpleplumber.Constraints{{Property: "port.name", Values: []string{"playback_AUX1"}}},
 				},
 			},
+			{ // ignore links to volume meters
+				ShouldBeLinked: nil,
+				From: simpleplumber.FullyQualifiedPortSelector{
+					Node: appSelector,
+				},
+				To: simpleplumber.FullyQualifiedPortSelector{
+					Node: simpleplumber.Constraints{{
+						Property: "media.name",
+						Values:   []string{"Peak detect"},
+					}},
+				},
+			},
 			{ // unlink app from all outputs
-				ShouldBeLinked: false,
+				ShouldBeLinked: ptr(false),
 				From: simpleplumber.FullyQualifiedPortSelector{
 					Node: appSelector,
 				},

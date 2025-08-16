@@ -48,6 +48,16 @@ routes:
             - property: port.name
               values: [playback_AUX1]
       should_be_linked: true
+    - from: # to do not unlink from volume meters (e.g. pavucontrol)
+        node:
+            - property: media.name
+              values: [' - mpv']
+              op: CONTAINS
+      to:
+        node:
+            - property: media.name
+              values: [Peak detect]
+      should_be_linked: null # <- means: keep as is; but since we already matched this rule, we won't get to the next one
     - from: # to unlink it from everything else
         node:
             - property: media.name

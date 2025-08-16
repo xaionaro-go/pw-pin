@@ -573,13 +573,17 @@ func (p *SimplePlumber) fixConnections(ctx context.Context, node *Node, port *Po
 					continue
 				}
 
+				alreadySet[remotePortKey] = struct{}{}
+				if route.ShouldBeLinked == nil {
+					continue
+				}
+
 				logger.Debugf(ctx, "fixConnections: making link state for node %d, port %d to remote node %d, port %d to %t due to route rule %s",
 					node.ID, port.ID, remoteNode.ID, remotePort.ID, route.ShouldBeLinked, jsoninze(route))
-				err := p.makeLinkState(ctx, node.ID, port.ID, remoteNode.ID, remotePort.ID, route.ShouldBeLinked)
-				alreadySet[remotePortKey] = struct{}{}
+				err := p.makeLinkState(ctx, node.ID, port.ID, remoteNode.ID, remotePort.ID, *route.ShouldBeLinked)
 				if err != nil {
 					logger.Errorf(ctx, "error making link state for node %d, port %d to remote node %d, port %d to %t: %v",
-						node.ID, port.ID, remoteNode.ID, remotePort.ID, route.ShouldBeLinked, err)
+						node.ID, port.ID, remoteNode.ID, remotePort.ID, *route.ShouldBeLinked, err)
 					return nil
 				}
 			}

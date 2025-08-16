@@ -35,5 +35,5 @@ type FullyQualifiedPortSelector struct {
 type Route struct {
 	From           FullyQualifiedPortSelector `yaml:"from,omitempty"`
 	To             FullyQualifiedPortSelector `yaml:"to,omitempty"`
-	ShouldBeLinked bool                       `yaml:"should_be_linked"`
+	ShouldBeLinked *bool                      `yaml:"should_be_linked"`
 }
