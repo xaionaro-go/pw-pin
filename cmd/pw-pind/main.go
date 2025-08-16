@@ -12,7 +12,7 @@ import (
 	"github.com/facebookincubator/go-belt/tool/logger"
 	"github.com/facebookincubator/go-belt/tool/logger/implementation/logrus"
 	"github.com/xaionaro-go/observability"
-	"github.com/xaionaro-go/simpleplumber/pkg/simpleplumber"
+	"github.com/xaionaro-go/pw-pin/pkg/pwpin"
 	"github.com/xaionaro-go/xpath"
 )
 
@@ -26,7 +26,7 @@ func main() {
 	)
 	configPathRaw := flag.String(
 		"config-file",
-		"~/.config/simpleplumber/config.yaml",
+		"~/.config/pw-pin/config.yaml",
 		"path to the configuration file",
 	)
 	generateSampleConfig := flag.Bool(
@@ -44,7 +44,7 @@ func main() {
 	configPath := must(xpath.Expand(*configPathRaw))
 	configBytes := must(os.ReadFile(configPath))
 
-	var config simpleplumber.Config
+	var config pwpin.Config
 	assertNoError(config.Parse(configBytes))
 
 	l := logrus.Default().WithLevel(logLevel)
@@ -62,7 +62,7 @@ func main() {
 		})
 	}
 
-	sp := simpleplumber.New()
+	sp := pwpin.New()
 	sp.SetConfig(config)
 
 	logger.Infof(ctx, "started")

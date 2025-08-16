@@ -1,4 +1,4 @@
-package simpleplumber
+package pwpin
 
 import (
 	"fmt"

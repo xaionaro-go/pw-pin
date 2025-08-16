@@ -12,8 +12,8 @@ import (
 	"github.com/facebookincubator/go-belt/tool/logger"
 	"github.com/facebookincubator/go-belt/tool/logger/implementation/logrus"
 	"github.com/xaionaro-go/observability"
-	"github.com/xaionaro-go/simpleplumber/pkg/sampleconfig"
-	"github.com/xaionaro-go/simpleplumber/pkg/simpleplumber"
+	"github.com/xaionaro-go/pw-pin/pkg/pwpin"
+	"github.com/xaionaro-go/pw-pin/pkg/sampleconfig"
 )
 
 func main() {
@@ -41,7 +41,7 @@ func main() {
 		})
 	}
 
-	sp := simpleplumber.New()
+	sp := pwpin.New()
 	sp.SetConfig(sampleconfig.Get())
 
 	logger.Infof(ctx, "started")
@@ -65,7 +65,7 @@ func main() {
 		}
 	})
 
-	ctx = simpleplumber.CtxWithOnRun(ctx, func(ctx context.Context, arg0 string, arg1toN ...string) {
+	ctx = pwpin.CtxWithOnRun(ctx, func(ctx context.Context, arg0 string, arg1toN ...string) {
 		logger.Infof(ctx, "running command: %s %s", arg0, strings.Join(arg1toN, " "))
 	})
 	must(sp.ServeContext(ctx))

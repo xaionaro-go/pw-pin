@@ -1,4 +1,4 @@
-# `simpleplumber`
+# `pw-pin`
 
 `wireplumber` broke a lot of compatibility from 0.4 to 0.5, while writing scripts for each of them is a big time investment (personally for me). At the same time I have few streaming-studio related workstations where I just need some wiring done no matter what with minimal effort. As a result I decided to write this small ugly service.
 
@@ -8,13 +8,13 @@ This service is supposed to be running in parallel to `wireplumber` (or alternat
 
 Install
 ```sh
-go install github.com/xaionaro-go/simpleplumber/cmd/simpleplumber@main
+go install github.com/xaionaro-go/pw-pin/cmd/pw-pind@main
 ```
 
 Configure:
 ```sh
-mkdir -p ~/.config/simpleplumber
-cat > ~/.config/simpleplumber/config.conf <<EOF
+mkdir -p ~/.config/pw-pin
+cat > ~/.config/pw-pin/config.conf <<EOF
 ```
 ```yaml
 routes:
@@ -73,12 +73,12 @@ EOF
 
 Run:
 ```sh
-"$(go env GOPATH)"/bin/simpleplumber
+"$(go env GOPATH)"/bin/pw-pind
 ```
 
 An example of output:
 ```sh
-streaming@void:~/go/src/github.com/xaionaro-go/simpleplumber$ ~/go/bin/simpleplumber
+streaming@void:~/go/src/github.com/xaionaro-go/pw-pin$ ~/go/bin/pw-pind
 INFO[0000]main.go:70 started
 INFO[0005]run.go:33 link {"From":{"NodeID":206,"PortID":208},"To":{"NodeID":114,"PortID":145}} created
 INFO[0005]run.go:56 link {"From":{"NodeID":206,"PortID":208},"To":{"NodeID":74,"PortID":137}} destroyed
@@ -90,15 +90,15 @@ If you need more info about `property`-ies mentioned in the config, try running 
 pw-dump --monitor
 ```
 
-As an ugly but simple solution to make `simpleplumber` run together with `pipewire`, run (under your normal user account):
+As an ugly but simple solution to make `pw-pind` run together with `pipewire`, run (under your normal user account):
 ```sh
 mkdir -p ~/.local/bin
-cat > ~/.local/bin/run-simpleplumber.sh <<EOF
+cat > ~/.local/bin/run-pw-pin.sh <<EOF
 #!/bin/bash
-killall -9 simpleplumber
-~/go/bin/simpleplumber "\$@" &
+killall -9 pw-pind
+~/go/bin/pw-pind "\$@" &
 EOF
-chmod +x ~/.local/bin/run-simpleplumber.sh
+chmod +x ~/.local/bin/run-pw-pin.sh
 ```
 then:
 ```sh
@@ -107,6 +107,6 @@ systemctl edit --user pipewire
 and add there:
 ```sh
 [Service]
-ExecStartPost=~/.local/bin/run-simpleplumber.sh
+ExecStartPost=~/.local/bin/run-pw-pin.sh
 ```
 This is abuse of `ExecStartPost`, you generally should not do that. But it is very simple, and it works. A better solution would be to write another service file and build a guarantee one is always executed on any `pipewire` restart.

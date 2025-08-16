@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/xaionaro-go/simpleplumber/pkg/sampleconfig"
+	"github.com/xaionaro-go/pw-pin/pkg/sampleconfig"
 )
 
 func printSampleConfig() {

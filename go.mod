@@ -1,4 +1,4 @@
-module github.com/xaionaro-go/simpleplumber
+module github.com/xaionaro-go/pw-pin
 
 go 1.24.2
 

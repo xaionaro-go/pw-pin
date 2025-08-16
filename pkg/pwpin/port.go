@@ -1,4 +1,4 @@
-package simpleplumber
+package pwpin
 
 import (
 	pwmonitor "github.com/xaionaro-go/pipewire-monitor-go"
