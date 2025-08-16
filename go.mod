@@ -3,7 +3,7 @@ module github.com/xaionaro-go/simpleplumber
 go 1.24.2
 
 require (
-	github.com/xaionaro-go/pipewire-monitor-go v0.0.0-20250815230842-0d656b62411c
+	github.com/xaionaro-go/pipewire-monitor-go v0.0.0-20250816010736-19cdc60aa6bc
 	github.com/xaionaro-go/xsync v0.0.0-20250111141039-3e7f31b1a2c6
 )
 
