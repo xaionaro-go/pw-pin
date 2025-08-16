@@ -87,3 +87,24 @@ If you need more info about `property`-ies mentioned in the config, try running 
 ```sh
 pw-dump --monitor
 ```
+
+As an ugly but simple solution to make `simpleplumber` run together with `pipewire`, run (under your normal user account):
+```sh
+mkdir -p ~/.local/bin
+cat > ~/.local/bin/run-simpleplumber.sh <<EOF
+#!/bin/bash
+killall -9 simpleplumber
+~/go/bin/simpleplumber "$@" &
+EOF
+chmod +x ~/.local/bin/run-simpleplumber.sh
+```
+then:
+```sh
+systemctl edit --user pipewire
+```
+and add there:
+```sh
+[Service]
+ExecStartPost=~/.local/bin/run-simpleplumber.sh
+```
+This is abuse of `ExecStartPost`, you generally should not do that. But it is very simple, and it works. A better solution would be to write another service file and build a guarantee one is always executed on any `pipewire` restart.
