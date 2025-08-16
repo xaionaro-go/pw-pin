@@ -96,7 +96,7 @@ mkdir -p ~/.local/bin
 cat > ~/.local/bin/run-simpleplumber.sh <<EOF
 #!/bin/bash
 killall -9 simpleplumber
-~/go/bin/simpleplumber "$@" &
+~/go/bin/simpleplumber "\$@" &
 EOF
 chmod +x ~/.local/bin/run-simpleplumber.sh
 ```
