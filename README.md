@@ -2,6 +2,8 @@
 
 `wireplumber` broke a lot of compatibility from 0.4 to 0.5, while writing scripts for each of them is a big time investment (personally for me). At the same time I have few streaming-studio related workstations where I just need some wiring done no matter what with minimal effort. As a result I decided to write this small ugly service.
 
+This service is supposed to be running in parallel to `wireplumber` (or alternative). However, it is also useable as a minimalistic replacement.
+
 ## Quick start
 
 Install
