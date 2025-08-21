@@ -10,9 +10,9 @@ import (
 	"github.com/facebookincubator/go-belt/tool/logger"
 )
 
-func (p *SimplePlumber) createLink(ctx context.Context, linkKey LinkKey) (_err error) {
+func (p *SimplePlumber) createLink(ctx context.Context, linkKey LinkKey) (_ret bool, _err error) {
 	logger.Debugf(ctx, "createLink(%s)", jsoninze(linkKey))
-	defer func() { logger.Tracef(ctx, "/createLink(%s), %v", jsoninze(linkKey), _err) }()
+	defer func() { logger.Tracef(ctx, "/createLink(%s): %v %v", jsoninze(linkKey), _ret, _err) }()
 
 	err := p.runCmd(
 		ctx,
@@ -25,17 +25,16 @@ func (p *SimplePlumber) createLink(ctx context.Context, linkKey LinkKey) (_err e
 		stdErrMsg := strings.Trim(runErr.Stderr, " \r\n\t")
 		if stdErrMsg == "failed to link ports: File exists" {
 			logger.Debugf(ctx, "the link already exists, ignoring the error")
-			return nil
+			return false, nil
 		}
-		return fmt.Errorf("failed to create the link %s: %w", jsoninze(linkKey), err)
+		return false, fmt.Errorf("failed to create the link %s: %w", jsoninze(linkKey), err)
 	}
-	logger.Infof(ctx, "link %s created", jsoninze(linkKey))
-	return nil
+	return true, nil
 }
 
-func (p *SimplePlumber) destroyLink(ctx context.Context, linkKey LinkKey) (_err error) {
+func (p *SimplePlumber) destroyLink(ctx context.Context, linkKey LinkKey) (_ret bool, _err error) {
 	logger.Debugf(ctx, "destroyLink(%s)", jsoninze(linkKey))
-	defer func() { logger.Tracef(ctx, "/destroyLink(%s), %v", jsoninze(linkKey), _err) }()
+	defer func() { logger.Tracef(ctx, "/destroyLink(%s): %v", jsoninze(linkKey), _ret, _err) }()
 
 	err := p.runCmd(
 		ctx,
@@ -48,12 +47,11 @@ func (p *SimplePlumber) destroyLink(ctx context.Context, linkKey LinkKey) (_err 
 		stdErrMsg := strings.Trim(runErr.Stderr, " \r\n\t")
 		if stdErrMsg == "failed to unlink ports: No such file or directory" {
 			logger.Debugf(ctx, "the link already does not exist, ignoring the error")
-			return nil
+			return false, nil
 		}
-		return fmt.Errorf("failed to destroy the link %s: %w", jsoninze(linkKey), err)
+		return true, fmt.Errorf("failed to destroy the link %s: %w", jsoninze(linkKey), err)
 	}
-	logger.Infof(ctx, "link %s destroyed", jsoninze(linkKey))
-	return nil
+	return true, nil
 }
 
 type ErrRun struct {

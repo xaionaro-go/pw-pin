@@ -591,11 +591,18 @@ func (p *SimplePlumber) fixConnections(ctx context.Context, node *Node, port *Po
 					node, port, remoteNode, remotePort,
 					*route.ShouldBeLinked, route,
 				)
-				err := p.makeLinkState(ctx, node.ID, port.ID, remoteNode.ID, remotePort.ID, *route.ShouldBeLinked)
+				isChanged, err := p.makeLinkState(ctx, node.ID, port.ID, remoteNode.ID, remotePort.ID, *route.ShouldBeLinked)
 				if err != nil {
 					logger.Errorf(ctx, "error making link state for node '%s', port '%s' to remote node '%s', port '%s' to %t: %v",
 						node, port, remoteNode, remotePort, *route.ShouldBeLinked, err)
 					return nil
+				}
+				if isChanged {
+					if *route.ShouldBeLinked {
+						logger.Infof(ctx, "link created: '%s'/'%s' -> '%s'/'%s'", node, port, remoteNode, remotePort)
+					} else {
+						logger.Infof(ctx, "link destroyed: '%s'/'%s' -> '%s'/'%s'", node, port, remoteNode, remotePort)
+					}
 				}
 			}
 		}
@@ -608,16 +615,16 @@ func (p *SimplePlumber) makeLinkState(
 	ctx context.Context,
 	nodeID0, portID0, nodeID1, portID1 int,
 	shouldBeLinked bool,
-) (_err error) {
+) (_ret bool, _err error) {
 	logger.Debugf(ctx, "makeLinkState(nodeID0=%d, portID0=%d, nodeID1=%d, portID1=%d, shouldBeLinked=%v)",
 		nodeID0, portID0, nodeID1, portID1, shouldBeLinked)
 	defer func() {
-		logger.Tracef(ctx, "/makeLinkState(nodeID0=%d, portID0=%d, nodeID1=%d, portID1=%d, shouldBeLinked=%v), %v",
-			nodeID0, portID0, nodeID1, portID1, shouldBeLinked, _err)
+		logger.Tracef(ctx, "/makeLinkState(nodeID0=%d, portID0=%d, nodeID1=%d, portID1=%d, shouldBeLinked=%v): %v %v",
+			nodeID0, portID0, nodeID1, portID1, shouldBeLinked, _ret, _err)
 	}()
 
 	if nodeID0 == nodeID1 && portID0 == portID1 {
-		return fmt.Errorf("cannot link a port to itself: nodeID0=%d, portID0=%d, nodeID1=%d, portID1=%d",
+		return false, fmt.Errorf("cannot link a port to itself: nodeID0=%d, portID0=%d, nodeID1=%d, portID1=%d",
 			nodeID0, portID0, nodeID1, portID1)
 	}
 
@@ -645,34 +652,34 @@ func (p *SimplePlumber) makeLinkState(
 			},
 		}
 	} else {
-		return fmt.Errorf("no source or sink found for node %d", nodeID0)
+		return false, fmt.Errorf("no source or sink found for node %d", nodeID0)
 	}
 
 	if shouldBeLinked {
 		if _, ok := p.ActiveLinks[linkKey]; ok {
 			logger.Debugf(ctx, "makeLinkState: link already exists, nothing to do")
-			return nil
+			return false, nil
 		}
 
 		logger.Debugf(ctx, "makeLinkState: creating new link")
-		err := p.createLink(ctx, linkKey)
+		changed, err := p.createLink(ctx, linkKey)
 		if err != nil {
-			return fmt.Errorf("error creating link: %w", err)
+			return false, fmt.Errorf("error creating link: %w", err)
 		}
-		return nil
+		return changed, nil
 	}
 	if _, ok := p.ActiveLinks[linkKey]; !ok {
 		logger.Debugf(ctx, "makeLinkState: link does not exist, nothing to do")
-		return nil
+		return false, nil
 	}
 
 	logger.Debugf(ctx, "makeLinkState: destroying existing link")
-	err := p.destroyLink(ctx, linkKey)
+	changed, err := p.destroyLink(ctx, linkKey)
 	if err != nil {
-		return fmt.Errorf("unable to destroy the link: %w", err)
+		return false, fmt.Errorf("unable to destroy the link: %w", err)
 	}
 
-	return nil
+	return changed, nil
 }
 
 func (p *SimplePlumber) forgetSink(ctx context.Context, id int) error {
