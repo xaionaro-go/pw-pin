@@ -70,6 +70,7 @@ routes:
 ```sh
 EOF
 ```
+(for the information which properties exist, see `pw-dump`)
 
 Run:
 ```sh
