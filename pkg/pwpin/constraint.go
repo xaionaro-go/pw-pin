@@ -3,6 +3,7 @@ package pwpin
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 
 	pwmonitor "github.com/xaionaro-go/pipewire-monitor-go"
@@ -12,6 +13,41 @@ type Constraint struct {
 	Property string       `yaml:"property"`
 	Values   []string     `yaml:"values,flow"`
 	Op       ConstraintOp `yaml:"op,omitempty"`
+
+	parsedState any `yaml:"-"`
+}
+
+func (op *Constraint) UnmarshalYAML(unmarshal func(any) error) error {
+	type resultT Constraint
+	var result resultT
+	if err := unmarshal(&result); err != nil {
+		return fmt.Errorf("failed to unmarshal Constraint: %w", err)
+	}
+
+	*op = (Constraint)(result)
+	if err := op.Init(); err != nil {
+		return fmt.Errorf("failed to build Constraint: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Constraint) Init() error {
+	c.parsedState = nil
+	switch c.Op {
+	case ConstraintOpRegexpMatch:
+		var regexps []*regexp.Regexp
+		for _, v := range c.Values {
+			regex, err := regexp.Compile(v)
+			if err != nil {
+				return fmt.Errorf("failed to compile regexp '%s': %w", v, err)
+			}
+			regexps = append(regexps, regex)
+		}
+		c.parsedState = regexps
+		return nil
+	}
+	return nil
 }
 
 func (c Constraint) Match(props pwmonitor.EventInfoProps) bool {
@@ -33,6 +69,19 @@ func (c Constraint) Match(props pwmonitor.EventInfoProps) bool {
 		return false
 	}
 	valueStr := fmt.Sprintf("%v", value)
+
+	switch c.Op {
+	case ConstraintOpRegexpMatch:
+		if c.parsedState == nil {
+			panic("Init() was not called before Match()")
+		}
+		for _, v := range c.parsedState.([]*regexp.Regexp) {
+			if v.MatchString(valueStr) {
+				return true
+			}
+		}
+		return false
+	}
 
 	for _, v := range c.Values {
 		switch c.Op {
@@ -78,6 +127,7 @@ const (
 	ConstraintOpNotEquals
 	ConstraintOpContains
 	ConstraintOpNotContains
+	ConstraintOpRegexpMatch
 	EndOfConstraintOp
 )
 
@@ -93,6 +143,8 @@ func (op ConstraintOp) String() string {
 		return "CONTAINS"
 	case ConstraintOpNotContains:
 		return "NOT_CONTAINS"
+	case ConstraintOpRegexpMatch:
+		return "REGEXP_MATCH"
 	default:
 		return fmt.Sprintf("unknown(%d)", op)
 	}
