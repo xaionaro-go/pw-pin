@@ -17,8 +17,8 @@ func (p *SimplePlumber) createLink(ctx context.Context, linkKey LinkKey) (_err e
 	err := p.runCmd(
 		ctx,
 		"pw-link",
-		fmt.Sprintf("%d:%d", linkKey.From.NodeID, linkKey.From.PortID),
-		fmt.Sprintf("%d:%d", linkKey.To.NodeID, linkKey.To.PortID),
+		fmt.Sprintf("%d", linkKey.From.PortID),
+		fmt.Sprintf("%d", linkKey.To.PortID),
 	)
 	if err != nil {
 		runErr := err.(ErrRun)
@@ -40,8 +40,8 @@ func (p *SimplePlumber) destroyLink(ctx context.Context, linkKey LinkKey) (_err 
 	err := p.runCmd(
 		ctx,
 		"pw-link", "-d",
-		fmt.Sprintf("%d:%d", linkKey.From.NodeID, linkKey.From.PortID),
-		fmt.Sprintf("%d:%d", linkKey.To.NodeID, linkKey.To.PortID),
+		fmt.Sprintf("%d", linkKey.From.PortID),
+		fmt.Sprintf("%d", linkKey.To.PortID),
 	)
 	if err != nil {
 		runErr := err.(ErrRun)
