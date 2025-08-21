@@ -19,6 +19,13 @@ type Node struct {
 	Ports map[int]*Port
 }
 
+func (n *Node) String() string {
+	if n.Info != nil && n.Info.Props != nil && n.Info.Props.NodeDescription != nil {
+		return fmt.Sprintf("%d (%s)", n.ID, *n.Info.Props.NodeDescription)
+	}
+	return fmt.Sprintf("%d", n.ID)
+}
+
 type Sink struct {
 	*Node
 	OutboundLinks map[PortKey]*Link
@@ -578,12 +585,16 @@ func (p *SimplePlumber) fixConnections(ctx context.Context, node *Node, port *Po
 					continue
 				}
 
-				logger.Debugf(ctx, "fixConnections: making link state for node %d, port %d to remote node %d, port %d to %t due to route rule %s",
-					node.ID, port.ID, remoteNode.ID, remotePort.ID, route.ShouldBeLinked, jsoninze(route))
+				logger.Debugf(
+					ctx,
+					"fixConnections: making link state for node '%s', port '%s' to remote node '%s', port '%s' to %t due to route rule %s",
+					node, port, remoteNode, remotePort,
+					*route.ShouldBeLinked, route,
+				)
 				err := p.makeLinkState(ctx, node.ID, port.ID, remoteNode.ID, remotePort.ID, *route.ShouldBeLinked)
 				if err != nil {
-					logger.Errorf(ctx, "error making link state for node %d, port %d to remote node %d, port %d to %t: %v",
-						node.ID, port.ID, remoteNode.ID, remotePort.ID, *route.ShouldBeLinked, err)
+					logger.Errorf(ctx, "error making link state for node '%s', port '%s' to remote node '%s', port '%s' to %t: %v",
+						node, port, remoteNode, remotePort, *route.ShouldBeLinked, err)
 					return nil
 				}
 			}

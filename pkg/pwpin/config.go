@@ -37,3 +37,7 @@ type Route struct {
 	To             FullyQualifiedPortSelector `yaml:"to,omitempty"`
 	ShouldBeLinked *bool                      `yaml:"should_be_linked"`
 }
+
+func (r *Route) String() string {
+	return jsoninze(r)
+}
